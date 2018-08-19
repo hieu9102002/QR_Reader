@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -14,6 +15,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -115,10 +122,11 @@ public class MainActivity extends AppCompatActivity {
     private void parseResult(String scanCode) {
         id = scanCode;
 
+        String urlId = "http://tech-invasion-test-2.herokuapp.com/checkin/" + id;
         //Get ID into temp memory for sync
         //Đưa id vào bộ nhớ tạm chưa đẩy lên server
         String counterNum = Integer.toString(counter);
-        editor.putString(counterNum, id);
+        editor.putString(counterNum, urlId);
         Log.d("abc", Integer.toString(counter) + ' ' + id);
         counter++;
         editor.putInt("Counter", counter);
@@ -134,8 +142,9 @@ public class MainActivity extends AppCompatActivity {
         //Get Info into temp memory for sync
         //Đưa thông tin vào bộ nhớ tạm chưa đẩy lên server
         String counterNum = Integer.toString(counter);
-        String condensedInfo = name + ' ' + phone + ' ' + email;
-        editor.putString(counterNum, condensedInfo);
+        String condensedInfo = name + '/' + phone + '/' + email;
+        String urlId = "http://tech-invasion-test-2.herokuapp.com/register/" + condensedInfo;
+        editor.putString(counterNum, urlId);
         Log.d("abc", Integer.toString(counter) + ' ' + condensedInfo);
         counter++;
         editor.putInt("Counter", counter);
@@ -150,7 +159,6 @@ public class MainActivity extends AppCompatActivity {
     //Update button press
     //Bấm nút Update
     public void Update(View view){
-        //TODO: Push data to server
         if(sharedPref.getString("0", null) == null || sharedPref.getString("0", null).isEmpty()){
             Toast.makeText(this, "No Data to push", Toast.LENGTH_SHORT).show();
         }
@@ -158,6 +166,23 @@ public class MainActivity extends AppCompatActivity {
             for(int i = 0; i <= counter; i++){
                 String j = Integer.toString(i);
                 String data = sharedPref.getString(j, null);
+
+                RequestQueue queue = Volley.newRequestQueue(this);
+
+                //Lấy Response
+                //Get Response
+                StringRequest stringRequest = new StringRequest(Request.Method.GET, data, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.i("Response", response);
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("ERROR", "DIDN'T WORK ");
+                    }
+                });
+                queue.add(stringRequest);
             }
         }
 
